@@ -128,6 +128,13 @@ CloseResponse close(const CloseRequest &request) noexcept;
 
 #include "json.hpp"
 #include "mkcurl.hpp"
+#include "mkmock.hpp"
+
+#ifdef MKREPORT_MOCK
+#define MKREPORT_HOOK MKMOCK_HOOK_ENABLED
+#else
+#define MKREPORT_HOOK MKMOCK_HOOK_DISABLED
+#endif
 
 namespace mk {
 namespace report {
@@ -178,9 +185,12 @@ OpenResponse open(const OpenRequest &request) noexcept {
   for (auto &entry : curl_response.logs) {
     response.logs.push_back(std::move(entry.line));
   }
+  MKREPORT_HOOK(open_response_error, curl_response.error);
+  MKREPORT_HOOK(open_response_status_code, curl_response.status_code);
   if (curl_response.error != 0 || curl_response.status_code != 200) {
     return response;
   }
+  MKREPORT_HOOK(open_response_body, curl_response.body);
   {
     log_body("Response", curl_response.body, response.logs);
     nlohmann::json doc;
@@ -227,6 +237,8 @@ UpdateResponse update(const UpdateRequest &request) noexcept {
   for (auto &entry : curl_response.logs) {
     response.logs.push_back(std::move(entry.line));
   }
+  MKREPORT_HOOK(update_response_error, curl_response.error);
+  MKREPORT_HOOK(update_response_status_code, curl_response.status_code);
   if (curl_response.error != 0 || curl_response.status_code != 200) {
     return response;
   }
