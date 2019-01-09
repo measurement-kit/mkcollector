@@ -79,7 +79,7 @@ TEST_CASE("We deal with open errors") {
 TEST_CASE("We deal with update errors") {
   SECTION("On failure to serialize the request body") {
     mk::report::UpdateRequest request;
-    request.content = "{";
+    request.content = "{";  // make content parsing fail
     auto response = mk::report::update(request);
     REQUIRE(!response.good);
   }
@@ -87,6 +87,7 @@ TEST_CASE("We deal with update errors") {
   SECTION("On network error") {
     MKMOCK_WITH_ENABLED_HOOK(update_response_error, CURL_LAST, {
       mk::report::UpdateRequest request;
+      request.content = "{}";  // required to avoid failing in parsing
       auto response = mk::report::update(request);
       REQUIRE(!response.good);
     });
@@ -96,6 +97,7 @@ TEST_CASE("We deal with update errors") {
     MKMOCK_WITH_ENABLED_HOOK(update_response_error, 0, {
       MKMOCK_WITH_ENABLED_HOOK(update_response_status_code, 500, {
         mk::report::UpdateRequest request;
+        request.content = "{}";  // required to avoid failing in parsing
         auto response = mk::report::update(request);
         REQUIRE(!response.good);
       });
