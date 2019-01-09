@@ -9,4 +9,5 @@
 /integration-tests
 /json.hpp
 /libmkreport.a
-/mkcurl.h
+/mkcurl.hpp
+/mkmock.hpp

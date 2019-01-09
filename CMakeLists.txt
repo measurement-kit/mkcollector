@@ -9,6 +9,7 @@ include(MkUtils)
 
 MkDownloadCatchorgCatch2()
 MkDownloadMeasurementKitMkCurl()
+MkDownloadMeasurementKitMkMock()
 MkDownloadNlohmannJson()
 MkDownloadCaBundle()
 

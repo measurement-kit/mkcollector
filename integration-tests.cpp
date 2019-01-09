@@ -1,9 +1,9 @@
-#include "mkreport.h"
+#include "mkreport.hpp"
 
 #include <iostream>
 
 #define MKCURL_INLINE_IMPL
-#include "mkcurl.h"
+#include "mkcurl.hpp"
 
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
@@ -15,39 +15,29 @@ static std::string collector_baseurl() {
 }
 
 static std::string open_report() {
-  mkreport_open_request_uptr r{
-      mkreport_open_request_new_nonnull()};
-  mkreport_open_request_set_probe_asn(r.get(), "AS30722");
-  mkreport_open_request_set_probe_cc(r.get(), "IT");
-  mkreport_open_request_set_software_name(r.get(), "mkreport");
-  mkreport_open_request_set_software_version(r.get(), "0.0.1");
-  mkreport_open_request_set_test_name(r.get(), "dummy");
-  mkreport_open_request_set_test_version(r.get(), "0.0.1");
-  mkreport_open_request_set_test_start_time(r.get(), "2018-11-01 15:33:17");
-  mkreport_open_request_set_base_url(r.get(), collector_baseurl().c_str());
-  mkreport_open_request_set_ca_bundle_path(r.get(), "ca-bundle.pem");
-  mkreport_open_request_set_timeout(r.get(), 14);
-  mkreport_open_response_uptr re{
-      mkreport_open_request_perform_nonnull(r.get())};
+  mk::report::OpenRequest r;
+  r.probe_asn = "AS30722";
+  r.probe_cc = "IT";
+  r.software_name = "mkreport";
+  r.software_version = "0.0.1";
+  r.test_name = "dummy";
+  r.test_version = "0.0.1";
+  r.test_start_time = "2018-11-01 15:33:17";
+  r.base_url = collector_baseurl();
+  r.ca_bundle_path = "ca-bundle.pem";
+  r.timeout = 14;
+  mk::report::OpenResponse re = mk::report::open(r);
   {
-    std::string logs = mkreport_open_response_moveout_logs(re);
-    REQUIRE(logs.size() > 0);
+    REQUIRE(re.logs.size() > 0);
     std::clog << "=== BEGIN OPEN LOGS ===" << std::endl;
-    std::clog << logs;
+    for (auto &s : re.logs) {
+      std::clog << s << std::endl;
+    }
     std::clog << "=== END OPEN LOGS ===" << std::endl;
   }
-  REQUIRE(mkreport_open_response_good(re.get()));
-  std::string report_id;
-  {
-    report_id = mkreport_open_response_get_report_id(re.get());
-    REQUIRE(report_id.size() > 0);
-    std::clog << report_id << std::endl;
-  }
-  return report_id;
-}
-
-TEST_CASE("We can open a report") {
-  (void)open_report();
+  REQUIRE(re.good);
+  REQUIRE(re.report_id.size() > 0);
+  return re.report_id;
 }
 
 static std::string dummy_report(std::string report_id) {
@@ -77,44 +67,40 @@ static std::string dummy_report(std::string report_id) {
 }
 
 static void update_report(std::string report_id) {
-  mkreport_update_request_uptr r{mkreport_update_request_new_nonnull()};
-  mkreport_update_request_set_report_id(r.get(), report_id.c_str());
-  mkreport_update_request_set_content(r.get(), dummy_report(report_id).c_str());
-  mkreport_update_request_set_base_url(r.get(), collector_baseurl().c_str());
-  mkreport_update_request_set_ca_bundle_path(r.get(), "ca-bundle.pem");
-  mkreport_update_request_set_timeout(r.get(), 14);
-  mkreport_update_response_uptr re{
-      mkreport_update_request_perform_nonnull(r.get())};
+  mk::report::UpdateRequest r;
+  r.report_id = report_id;
+  r.content = dummy_report(report_id);
+  r.base_url = collector_baseurl();
+  r.ca_bundle_path = "ca-bundle.pem";
+  r.timeout = 14;
+  mk::report::UpdateResponse re = mk::report::update(r);
   {
-    std::string logs = mkreport_update_response_moveout_logs(re);
-    REQUIRE(logs.size() > 0);
-    std::clog << "=== BEGIN LOGIN LOGS ===" << std::endl;
-    std::clog << logs;
-    std::clog << "=== END LOGIN LOGS ===" << std::endl;
+    REQUIRE(re.logs.size() > 0);
+    std::clog << "=== BEGIN UPDATE LOGS ===" << std::endl;
+    for (auto &s : re.logs) {
+      std::clog << s << std::endl;
+    }
+    std::clog << "=== END UPDATE LOGS ===" << std::endl;
   }
-  REQUIRE(mkreport_update_response_good(re.get()));
+  REQUIRE(re.good);
 }
 
-TEST_CASE("We can update a report") {
-  update_report(open_report());
-}
-
-TEST_CASE("We can close a report") {
+TEST_CASE("We can open, update, and close a report") {
   std::string report_id = open_report();
   update_report(report_id);
-  mkreport_close_request_uptr r{mkreport_close_request_new_nonnull()};
-  mkreport_close_request_set_report_id(r.get(), report_id.c_str());
-  mkreport_close_request_set_base_url(r.get(), collector_baseurl().c_str());
-  mkreport_close_request_set_ca_bundle_path(r.get(), "ca-bundle.pem");
-  mkreport_close_request_set_timeout(r.get(), 14);
-  mkreport_close_response_uptr re{
-      mkreport_close_request_perform_nonnull(r.get())};
+  mk::report::CloseRequest r;
+  r.report_id = report_id;
+  r.base_url = collector_baseurl();
+  r.ca_bundle_path = "ca-bundle.pem";
+  r.timeout = 14;
+  mk::report::CloseResponse re = mk::report::close(r);
   {
-    std::string logs = mkreport_close_response_moveout_logs(re);
-    REQUIRE(logs.size() > 0);
-    std::clog << "=== BEGIN LOGIN LOGS ===" << std::endl;
-    std::clog << logs;
-    std::clog << "=== END LOGIN LOGS ===" << std::endl;
+    REQUIRE(re.logs.size() > 0);
+    std::clog << "=== BEGIN CLOSE LOGS ===" << std::endl;
+    for (auto &s : re.logs) {
+      std::clog << s << std::endl;
+    }
+    std::clog << "=== END CLOSE LOGS ===" << std::endl;
   }
-  REQUIRE(mkreport_close_response_good(re.get()));
+  REQUIRE(re.good);
 }
