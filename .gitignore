@@ -2,6 +2,7 @@
 /CMakeFiles/
 /CTestTestfile.cmake
 /Makefile
+/Testing/
 /argh.h
 /ca-bundle.pem
 /catch.hpp
@@ -9,4 +10,6 @@
 /integration-tests
 /json.hpp
 /libmkreport.a
-/mkcurl.h
+/mkcurl.hpp
+/mkmock.hpp
+/tests

@@ -9,6 +9,7 @@ include(MkUtils)
 
 MkDownloadCatchorgCatch2()
 MkDownloadMeasurementKitMkCurl()
+MkDownloadMeasurementKitMkMock()
 MkDownloadNlohmannJson()
 MkDownloadCaBundle()
 
@@ -37,8 +38,6 @@ set(MKREPORT_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
     ${CURL_INCLUDE_DIRS} ${CMAKE_REQUIRED_INCLUDES})
 
 add_library(mkreport mkreport.cpp)
-add_executable(integration-tests integration-tests.cpp)
-target_include_directories(integration-tests PUBLIC ${MKREPORT_INCLUDES})
 list (APPEND MKREPORT_LIBS ${CURL_LIBRARIES})
 if("${WIN32}" OR "${MINGW}")
   list(APPEND MKREPORT_LIBS "ws2_32")
@@ -47,13 +46,19 @@ if("${WIN32}" OR "${MINGW}")
   endif()
 endif()
 list(APPEND MKREPORT_LIBS Threads::Threads)
-target_link_libraries(integration-tests "${MKREPORT_LIBS}" mkreport)
 
 # Testing
 # -------
 
 set(BUILD_TESTING "ON" CACHE BOOL "Whether to build tests")
 if(${BUILD_TESTING})
+  add_executable(integration-tests integration-tests.cpp)
+  target_include_directories(integration-tests PUBLIC ${MKREPORT_INCLUDES})
+  target_link_libraries(integration-tests "${MKREPORT_LIBS}" mkreport)
+  add_executable(tests tests.cpp)
+  target_include_directories(tests PUBLIC ${MKREPORT_INCLUDES})
+  target_link_libraries(tests "${MKREPORT_LIBS}")
   enable_testing()
-  add_test(NAME basic_test COMMAND integration-tests)
+  add_test(NAME integration_tests COMMAND integration-tests)
+  add_test(NAME mocked_tests COMMAND tests)
 endif()
