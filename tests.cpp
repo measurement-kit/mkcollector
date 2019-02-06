@@ -11,9 +11,9 @@ MKMOCK_DEFINE_HOOK(close_response_status_code, int64_t);
 #define MKCURL_INLINE_IMPL
 #include "mkcurl.hpp"
 
-#define MKREPORT_MOCK
-#define MKREPORT_INLINE_IMPL
-#include "mkreport.hpp"
+#define MKCOLLECTOR_MOCK
+#define MKCOLLECTOR_INLINE_IMPL
+#include "mkcollector.hpp"
 
 #include <iostream>
 
@@ -38,17 +38,17 @@ const uint8_t binary_input[] = {
 
 TEST_CASE("We deal with open errors") {
   SECTION("On failure to serialize the request body") {
-    mk::report::OpenRequest request;
+    mk::collector::OpenRequest request;
     request.probe_cc = std::string{(const char *)binary_input,
                                    sizeof(binary_input)};
-    auto response = mk::report::open(request);
+    auto response = mk::collector::open(request);
     REQUIRE(!response.good);
   }
 
   SECTION("On network error") {
     MKMOCK_WITH_ENABLED_HOOK(open_response_error, CURL_LAST, {
-      mk::report::OpenRequest request;
-      auto response = mk::report::open(request);
+      mk::collector::OpenRequest request;
+      auto response = mk::collector::open(request);
       REQUIRE(!response.good);
     });
   }
@@ -56,8 +56,8 @@ TEST_CASE("We deal with open errors") {
   SECTION("On HTTP error") {
     MKMOCK_WITH_ENABLED_HOOK(open_response_error, 0, {
       MKMOCK_WITH_ENABLED_HOOK(open_response_status_code, 500, {
-        mk::report::OpenRequest request;
-        auto response = mk::report::open(request);
+        mk::collector::OpenRequest request;
+        auto response = mk::collector::open(request);
         REQUIRE(!response.good);
       });
     });
@@ -67,8 +67,8 @@ TEST_CASE("We deal with open errors") {
     MKMOCK_WITH_ENABLED_HOOK(open_response_error, 0, {
       MKMOCK_WITH_ENABLED_HOOK(open_response_status_code, 200, {
         MKMOCK_WITH_ENABLED_HOOK(open_response_body, "{", {
-          mk::report::OpenRequest request;
-          auto response = mk::report::open(request);
+          mk::collector::OpenRequest request;
+          auto response = mk::collector::open(request);
           REQUIRE(!response.good);
         });
       });
@@ -78,17 +78,17 @@ TEST_CASE("We deal with open errors") {
 
 TEST_CASE("We deal with update errors") {
   SECTION("On failure to serialize the request body") {
-    mk::report::UpdateRequest request;
+    mk::collector::UpdateRequest request;
     request.content = "{";  // make content parsing fail
-    auto response = mk::report::update(request);
+    auto response = mk::collector::update(request);
     REQUIRE(!response.good);
   }
 
   SECTION("On network error") {
     MKMOCK_WITH_ENABLED_HOOK(update_response_error, CURL_LAST, {
-      mk::report::UpdateRequest request;
+      mk::collector::UpdateRequest request;
       request.content = "{}";  // required to avoid failing in parsing
-      auto response = mk::report::update(request);
+      auto response = mk::collector::update(request);
       REQUIRE(!response.good);
     });
   }
@@ -96,9 +96,9 @@ TEST_CASE("We deal with update errors") {
   SECTION("On HTTP error") {
     MKMOCK_WITH_ENABLED_HOOK(update_response_error, 0, {
       MKMOCK_WITH_ENABLED_HOOK(update_response_status_code, 500, {
-        mk::report::UpdateRequest request;
+        mk::collector::UpdateRequest request;
         request.content = "{}";  // required to avoid failing in parsing
-        auto response = mk::report::update(request);
+        auto response = mk::collector::update(request);
         REQUIRE(!response.good);
       });
     });
@@ -108,8 +108,8 @@ TEST_CASE("We deal with update errors") {
 TEST_CASE("We deal with close errors") {
   SECTION("On network error") {
     MKMOCK_WITH_ENABLED_HOOK(close_response_error, CURL_LAST, {
-      mk::report::CloseRequest request;
-      auto response = mk::report::close(request);
+      mk::collector::CloseRequest request;
+      auto response = mk::collector::close(request);
       REQUIRE(!response.good);
     });
   }
@@ -117,8 +117,8 @@ TEST_CASE("We deal with close errors") {
   SECTION("On HTTP error") {
     MKMOCK_WITH_ENABLED_HOOK(close_response_error, 0, {
       MKMOCK_WITH_ENABLED_HOOK(close_response_status_code, 500, {
-        mk::report::CloseRequest request;
-        auto response = mk::report::close(request);
+        mk::collector::CloseRequest request;
+        auto response = mk::collector::close(request);
         REQUIRE(!response.good);
       });
     });

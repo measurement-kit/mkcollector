@@ -1,8 +1,8 @@
 // Part of Measurement Kit <https://measurement-kit.github.io/>.
 // Measurement Kit is free software under the BSD license. See AUTHORS
 // and LICENSE for more information on the copying conditions.
-#ifndef MEASUREMENT_KIT_MKREPORT_HPP
-#define MEASUREMENT_KIT_MKREPORT_HPP
+#ifndef MEASUREMENT_KIT_MKCOLLECTOR_HPP
+#define MEASUREMENT_KIT_MKCOLLECTOR_HPP
 
 #include <stdint.h>
 
@@ -10,9 +10,9 @@
 #include <vector>
 
 namespace mk {
-namespace report {
+namespace collector {
 
-/// OpenRequest is a request to open a report.
+/// OpenRequest is a request to open a report with a collector.
 class OpenRequest {
  public:
   /// probe_asn is the probe ASN
@@ -58,7 +58,7 @@ struct OpenResponse {
   std::vector<std::string> logs;
 };
 
-/// open opens a report.
+/// open opens a report with a collector.
 OpenResponse open(const OpenRequest &request) noexcept;
 
 /// UpdateRequest is a request to update a report with a new measurement.
@@ -117,12 +117,12 @@ struct CloseResponse {
 /// close closes a report.
 CloseResponse close(const CloseRequest &request) noexcept;
 
-}  // namespace report
+}  // namespace collector
 }  // namespace mk
 
 // The implementation can be included inline by defining this preprocessor
 // symbol. If you only care about API, you can stop reading here.
-#ifdef MKREPORT_INLINE_IMPL
+#ifdef MKCOLLECTOR_INLINE_IMPL
 
 #include <sstream>
 
@@ -130,14 +130,14 @@ CloseResponse close(const CloseRequest &request) noexcept;
 #include "mkcurl.hpp"
 #include "mkmock.hpp"
 
-#ifdef MKREPORT_MOCK
-#define MKREPORT_HOOK MKMOCK_HOOK_ENABLED
+#ifdef MKCOLLECTOR_MOCK
+#define MKCOLLECTOR_HOOK MKMOCK_HOOK_ENABLED
 #else
-#define MKREPORT_HOOK MKMOCK_HOOK_DISABLED
+#define MKCOLLECTOR_HOOK MKMOCK_HOOK_DISABLED
 #endif
 
 namespace mk {
-namespace report {
+namespace collector {
 
 // log_body is a helper to log about a body.
 static void log_body(const std::string &prefix, const std::string &body,
@@ -185,12 +185,12 @@ OpenResponse open(const OpenRequest &request) noexcept {
   for (auto &entry : curl_response.logs) {
     response.logs.push_back(std::move(entry.line));
   }
-  MKREPORT_HOOK(open_response_error, curl_response.error);
-  MKREPORT_HOOK(open_response_status_code, curl_response.status_code);
+  MKCOLLECTOR_HOOK(open_response_error, curl_response.error);
+  MKCOLLECTOR_HOOK(open_response_status_code, curl_response.status_code);
   if (curl_response.error != 0 || curl_response.status_code != 200) {
     return response;
   }
-  MKREPORT_HOOK(open_response_body, curl_response.body);
+  MKCOLLECTOR_HOOK(open_response_body, curl_response.body);
   {
     log_body("Response", curl_response.body, response.logs);
     nlohmann::json doc;
@@ -237,8 +237,8 @@ UpdateResponse update(const UpdateRequest &request) noexcept {
   for (auto &entry : curl_response.logs) {
     response.logs.push_back(std::move(entry.line));
   }
-  MKREPORT_HOOK(update_response_error, curl_response.error);
-  MKREPORT_HOOK(update_response_status_code, curl_response.status_code);
+  MKCOLLECTOR_HOOK(update_response_error, curl_response.error);
+  MKCOLLECTOR_HOOK(update_response_status_code, curl_response.status_code);
   if (curl_response.error != 0 || curl_response.status_code != 200) {
     return response;
   }
@@ -272,7 +272,7 @@ CloseResponse close(const CloseRequest &request) noexcept {
   return response;
 }
 
-}  // namespace report
+}  // namespace collector
 }  // namespace mk
-#endif  // MKREPORT_INLINE_IMPL
-#endif  // MEASUREMENT_KIT_MKREPORT_HPP
+#endif  // MKCOLLECTOR_INLINE_IMPL
+#endif  // MEASUREMENT_KIT_MKCOLLECTOR_HPP

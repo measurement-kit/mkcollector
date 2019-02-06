@@ -1,4 +1,4 @@
-#include "mkreport.hpp"
+#include "mkcollector.hpp"
 
 #include <iostream>
 
@@ -15,10 +15,10 @@ static std::string collector_baseurl() {
 }
 
 static std::string open_report() {
-  mk::report::OpenRequest r;
+  mk::collector::OpenRequest r;
   r.probe_asn = "AS30722";
   r.probe_cc = "IT";
-  r.software_name = "mkreport";
+  r.software_name = "mkcollector";
   r.software_version = "0.0.1";
   r.test_name = "dummy";
   r.test_version = "0.0.1";
@@ -26,7 +26,7 @@ static std::string open_report() {
   r.base_url = collector_baseurl();
   r.ca_bundle_path = "ca-bundle.pem";
   r.timeout = 14;
-  mk::report::OpenResponse re = mk::report::open(r);
+  mk::collector::OpenResponse re = mk::collector::open(r);
   {
     REQUIRE(re.logs.size() > 0);
     std::clog << "=== BEGIN OPEN LOGS ===" << std::endl;
@@ -54,7 +54,7 @@ static std::string dummy_report(std::string report_id) {
   doc["probe_city"] = nullptr;
   doc["probe_ip"] = "127.0.0.1";
   doc["report_id"] = report_id;
-  doc["software_name"] = "mkreport";
+  doc["software_name"] = "mkcollector";
   doc["software_version"] = "0.0.1";
   doc["test_helpers"] = nlohmann::json::array();
   doc["test_keys"] = nlohmann::json::object();
@@ -67,13 +67,13 @@ static std::string dummy_report(std::string report_id) {
 }
 
 static void update_report(std::string report_id) {
-  mk::report::UpdateRequest r;
+  mk::collector::UpdateRequest r;
   r.report_id = report_id;
   r.content = dummy_report(report_id);
   r.base_url = collector_baseurl();
   r.ca_bundle_path = "ca-bundle.pem";
   r.timeout = 14;
-  mk::report::UpdateResponse re = mk::report::update(r);
+  mk::collector::UpdateResponse re = mk::collector::update(r);
   {
     REQUIRE(re.logs.size() > 0);
     std::clog << "=== BEGIN UPDATE LOGS ===" << std::endl;
@@ -88,12 +88,12 @@ static void update_report(std::string report_id) {
 TEST_CASE("We can open, update, and close a report") {
   std::string report_id = open_report();
   update_report(report_id);
-  mk::report::CloseRequest r;
+  mk::collector::CloseRequest r;
   r.report_id = report_id;
   r.base_url = collector_baseurl();
   r.ca_bundle_path = "ca-bundle.pem";
   r.timeout = 14;
-  mk::report::CloseResponse re = mk::report::close(r);
+  mk::collector::CloseResponse re = mk::collector::close(r);
   {
     REQUIRE(re.logs.size() > 0);
     std::clog << "=== BEGIN CLOSE LOGS ===" << std::endl;

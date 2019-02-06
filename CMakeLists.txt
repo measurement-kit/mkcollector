@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1.0)
-project(mkreport LANGUAGES CXX)
+project(mkcollector LANGUAGES CXX)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules")
 include(MkUtils)
@@ -18,7 +18,7 @@ if("${MSVC}")
   list(APPEND CMAKE_INCLUDE_PATH "${MK_WINDOWS_CURL_INCLUDE_PATH}")
   list(APPEND CMAKE_LIBRARY_PATH "${MK_WINDOWS_CURL_LIBRARY_PATH}")
   add_definitions(${MK_WINDOWS_CURL_DEFINITIONS})
-  list(APPEND MKREPORT_LIBS ${MK_WINDOWS_CURL_EXTRA_LINK_LIBS})
+  list(APPEND MKCOLLECTOR_LIBS ${MK_WINDOWS_CURL_EXTRA_LINK_LIBS})
 endif()
 
 # Checks
@@ -34,18 +34,18 @@ MkSetCompilerFlags()
 # Library and binary
 # ------------------
 
-set(MKREPORT_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
+set(MKCOLLECTOR_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
     ${CURL_INCLUDE_DIRS} ${CMAKE_REQUIRED_INCLUDES})
 
-add_library(mkreport mkreport.cpp)
-list (APPEND MKREPORT_LIBS ${CURL_LIBRARIES})
+add_library(mkcollector mkcollector.cpp)
+list (APPEND MKCOLLECTOR_LIBS ${CURL_LIBRARIES})
 if("${WIN32}" OR "${MINGW}")
-  list(APPEND MKREPORT_LIBS "ws2_32")
+  list(APPEND MKCOLLECTOR_LIBS "ws2_32")
   if ("${MINGW}")
-      list(APPEND MKREPORT_LIBS -static-libgcc -static-libstdc++)
+      list(APPEND MKCOLLECTOR_LIBS -static-libgcc -static-libstdc++)
   endif()
 endif()
-list(APPEND MKREPORT_LIBS Threads::Threads)
+list(APPEND MKCOLLECTOR_LIBS Threads::Threads)
 
 # Testing
 # -------
@@ -53,11 +53,11 @@ list(APPEND MKREPORT_LIBS Threads::Threads)
 set(BUILD_TESTING "ON" CACHE BOOL "Whether to build tests")
 if(${BUILD_TESTING})
   add_executable(integration-tests integration-tests.cpp)
-  target_include_directories(integration-tests PUBLIC ${MKREPORT_INCLUDES})
-  target_link_libraries(integration-tests "${MKREPORT_LIBS}" mkreport)
+  target_include_directories(integration-tests PUBLIC ${MKCOLLECTOR_INCLUDES})
+  target_link_libraries(integration-tests "${MKCOLLECTOR_LIBS}" mkcollector)
   add_executable(tests tests.cpp)
-  target_include_directories(tests PUBLIC ${MKREPORT_INCLUDES})
-  target_link_libraries(tests "${MKREPORT_LIBS}")
+  target_include_directories(tests PUBLIC ${MKCOLLECTOR_INCLUDES})
+  target_link_libraries(tests "${MKCOLLECTOR_LIBS}")
   enable_testing()
   add_test(NAME integration_tests COMMAND integration-tests)
   add_test(NAME mocked_tests COMMAND tests)

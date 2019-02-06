@@ -9,7 +9,7 @@
 /cmake_install.cmake
 /integration-tests
 /json.hpp
-/libmkreport.a
+/libmkcollector.a
 /mkcurl.hpp
 /mkmock.hpp
 /tests
