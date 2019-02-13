@@ -24,7 +24,7 @@ static std::string open_report() {
   r.test_version = "0.0.1";
   r.test_start_time = "2018-11-01 15:33:17";
   r.base_url = collector_baseurl();
-  r.ca_bundle_path = "ca-bundle.pem";
+  r.ca_bundle_path = ".mkbuild/data/cacert.pem";
   r.timeout = 14;
   mk::collector::OpenResponse re = mk::collector::open(r);
   {
@@ -71,7 +71,7 @@ static void update_report(std::string report_id) {
   r.report_id = report_id;
   r.content = dummy_report(report_id);
   r.base_url = collector_baseurl();
-  r.ca_bundle_path = "ca-bundle.pem";
+  r.ca_bundle_path = ".mkbuild/data/cacert.pem";
   r.timeout = 14;
   mk::collector::UpdateResponse re = mk::collector::update(r);
   {
@@ -91,7 +91,7 @@ TEST_CASE("We can open, update, and close a report") {
   mk::collector::CloseRequest r;
   r.report_id = report_id;
   r.base_url = collector_baseurl();
-  r.ca_bundle_path = "ca-bundle.pem";
+  r.ca_bundle_path = ".mkbuild/data/cacert.pem";
   r.timeout = 14;
   mk::collector::CloseResponse re = mk::collector::close(r);
   {

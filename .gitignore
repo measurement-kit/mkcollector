@@ -1,15 +1,1 @@
-/CMakeCache.txt
-/CMakeFiles/
-/CTestTestfile.cmake
-/Makefile
-/Testing/
-/argh.h
-/ca-bundle.pem
-/catch.hpp
-/cmake_install.cmake
-/integration-tests
-/json.hpp
-/libmkcollector.a
-/mkcurl.hpp
-/mkmock.hpp
-/tests
+/build
