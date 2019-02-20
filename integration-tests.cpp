@@ -16,6 +16,7 @@ static std::string collector_baseurl() {
 
 static std::string open_report() {
   mk::collector::OpenRequest r;
+  mk::collector::Settings s;
   r.probe_asn = "AS30722";
   r.probe_cc = "IT";
   r.software_name = "mkcollector";
@@ -23,15 +24,15 @@ static std::string open_report() {
   r.test_name = "dummy";
   r.test_version = "0.0.1";
   r.test_start_time = "2018-11-01 15:33:17";
-  r.base_url = collector_baseurl();
-  r.ca_bundle_path = ".mkbuild/data/cacert.pem";
-  r.timeout = 14;
-  mk::collector::OpenResponse re = mk::collector::open(r);
+  s.base_url = collector_baseurl();
+  s.ca_bundle_path = ".mkbuild/data/cacert.pem";
+  s.timeout = 14;
+  mk::collector::OpenResponse re = mk::collector::open(r, s);
   {
     REQUIRE(re.logs.size() > 0);
     std::clog << "=== BEGIN OPEN LOGS ===" << std::endl;
-    for (auto &s : re.logs) {
-      std::clog << s << std::endl;
+    for (auto &line : re.logs) {
+      std::clog << line << std::endl;
     }
     std::clog << "=== END OPEN LOGS ===" << std::endl;
   }
@@ -68,17 +69,18 @@ static std::string dummy_report(std::string report_id) {
 
 static void update_report(std::string report_id) {
   mk::collector::UpdateRequest r;
+  mk::collector::Settings s;
   r.report_id = report_id;
   r.content = dummy_report(report_id);
-  r.base_url = collector_baseurl();
-  r.ca_bundle_path = ".mkbuild/data/cacert.pem";
-  r.timeout = 14;
-  mk::collector::UpdateResponse re = mk::collector::update(r);
+  s.base_url = collector_baseurl();
+  s.ca_bundle_path = ".mkbuild/data/cacert.pem";
+  s.timeout = 14;
+  mk::collector::UpdateResponse re = mk::collector::update(r, s);
   {
     REQUIRE(re.logs.size() > 0);
     std::clog << "=== BEGIN UPDATE LOGS ===" << std::endl;
-    for (auto &s : re.logs) {
-      std::clog << s << std::endl;
+    for (auto &line : re.logs) {
+      std::clog << line << std::endl;
     }
     std::clog << "=== END UPDATE LOGS ===" << std::endl;
   }
@@ -89,16 +91,17 @@ TEST_CASE("We can open, update, and close a report") {
   std::string report_id = open_report();
   update_report(report_id);
   mk::collector::CloseRequest r;
+  mk::collector::Settings s;
   r.report_id = report_id;
-  r.base_url = collector_baseurl();
-  r.ca_bundle_path = ".mkbuild/data/cacert.pem";
-  r.timeout = 14;
-  mk::collector::CloseResponse re = mk::collector::close(r);
+  s.base_url = collector_baseurl();
+  s.ca_bundle_path = ".mkbuild/data/cacert.pem";
+  s.timeout = 14;
+  mk::collector::CloseResponse re = mk::collector::close(r, s);
   {
     REQUIRE(re.logs.size() > 0);
     std::clog << "=== BEGIN CLOSE LOGS ===" << std::endl;
-    for (auto &s : re.logs) {
-      std::clog << s << std::endl;
+    for (auto &line : re.logs) {
+      std::clog << line << std::endl;
     }
     std::clog << "=== END CLOSE LOGS ===" << std::endl;
   }

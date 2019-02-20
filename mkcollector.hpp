@@ -12,6 +12,19 @@
 namespace mk {
 namespace collector {
 
+/// Settings contains common network related settings.
+class Settings {
+ public:
+  /// base_url is the OONI collector base_url
+  std::string base_url;
+
+  /// ca_bundle_path is the path to the CA bundle (required on mobile)
+  std::string ca_bundle_path;
+
+  /// timeout is the whole operation timeout (in seconds)
+  int64_t timeout = 30;
+};
+
 /// OpenRequest is a request to open a report with a collector.
 class OpenRequest {
  public:
@@ -35,15 +48,6 @@ class OpenRequest {
 
   /// test_start_time is the time when the test started
   std::string test_start_time;
-
-  /// base_url is the OONI collector base_url
-  std::string base_url;
-
-  /// ca_bundle_path is the path to the CA bundle (required on mobile)
-  std::string ca_bundle_path;
-
-  /// timeout is the whole operation timeout (in seconds)
-  int64_t timeout = 30;
 };
 
 /// OpenResponse is the response to an open request.
@@ -59,7 +63,8 @@ struct OpenResponse {
 };
 
 /// open opens a report with a collector.
-OpenResponse open(const OpenRequest &request) noexcept;
+OpenResponse open(const OpenRequest &request,
+                  const Settings &settings) noexcept;
 
 /// UpdateRequest is a request to update a report with a new measurement.
 struct UpdateRequest {
@@ -68,15 +73,6 @@ struct UpdateRequest {
 
   /// content is the measurement entry serialised as a string.
   std::string content;
-
-  /// base_url is the OONI collector base URL.
-  std::string base_url;
-
-  /// ca_bundle_path is the path to the CA bundle (required on mobile).
-  std::string ca_bundle_path;
-
-  /// timeout is the whole-operation timeout (in seconds).
-  int64_t timeout = 30;
 };
 
 /// UpdateResponse is a response to an update request.
@@ -88,21 +84,13 @@ struct UpdateResponse {
 };
 
 /// update updates a report by adding a new measurement.
-UpdateResponse update(const UpdateRequest &request) noexcept;
+UpdateResponse update(const UpdateRequest &request,
+                      const Settings &settings) noexcept;
 
 /// CloseRequest is a request to close a report.
 struct CloseRequest {
   /// report_id is the report ID
   std::string report_id;
-
-  /// base_url is OONI collector's base URL
-  std::string base_url;
-
-  /// ca_bundle_path is the path to the CA bundle (required on mobile)
-  std::string ca_bundle_path;
-
-  /// timeout is the whole-operation timeout (in seconds)
-  int64_t timeout = 30;
 };
 
 /// CloseResponse is a response to a close request
@@ -115,7 +103,8 @@ struct CloseResponse {
 };
 
 /// close closes a report.
-CloseResponse close(const CloseRequest &request) noexcept;
+CloseResponse close(const CloseRequest &request,
+                    const Settings &settings) noexcept;
 
 }  // namespace collector
 }  // namespace mk
@@ -148,15 +137,16 @@ static void log_body(const std::string &prefix, const std::string &body,
   logs.push_back(ss.str());
 }
 
-OpenResponse open(const OpenRequest &request) noexcept {
+OpenResponse open(const OpenRequest &request,
+                  const Settings &settings) noexcept {
   OpenResponse response;
   curl::Request curl_request;
-  curl_request.ca_path = request.ca_bundle_path;
-  curl_request.timeout = request.timeout;
+  curl_request.ca_path = settings.ca_bundle_path;
+  curl_request.timeout = settings.timeout;
   curl_request.method = "POST";
   curl_request.headers.push_back("Content-Type: application/json");
   {
-    std::string url = request.base_url;
+    std::string url = settings.base_url;
     url += "/report";
     std::swap(url, curl_request.url);
   }
@@ -207,15 +197,16 @@ OpenResponse open(const OpenRequest &request) noexcept {
   return response;
 }
 
-UpdateResponse update(const UpdateRequest &request) noexcept {
+UpdateResponse update(const UpdateRequest &request,
+                      const Settings &settings) noexcept {
   UpdateResponse response;
   curl::Request curl_request;
-  curl_request.ca_path = request.ca_bundle_path;
-  curl_request.timeout = request.timeout;
+  curl_request.ca_path = settings.ca_bundle_path;
+  curl_request.timeout = settings.timeout;
   curl_request.method = "POST";
   curl_request.headers.push_back("Content-Type: application/json");
   {
-    std::string url = request.base_url;
+    std::string url = settings.base_url;
     url += "/report/";
     url += request.report_id;
     std::swap(url, curl_request.url);
@@ -259,14 +250,15 @@ UpdateResponse update(const UpdateRequest &request) noexcept {
   return response;
 }
 
-CloseResponse close(const CloseRequest &request) noexcept {
+CloseResponse close(const CloseRequest &request,
+                    const Settings &settings) noexcept {
   CloseResponse response;
   curl::Request curl_request;
   curl_request.method = "POST";
-  curl_request.ca_path = request.ca_bundle_path;
-  curl_request.timeout = request.timeout;
+  curl_request.ca_path = settings.ca_bundle_path;
+  curl_request.timeout = settings.timeout;
   {
-    std::string url = request.base_url;
+    std::string url = settings.base_url;
     url += "/report/";
     url += request.report_id;
     url += "/close";

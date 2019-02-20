@@ -41,14 +41,16 @@ TEST_CASE("We deal with open errors") {
     mk::collector::OpenRequest request;
     request.probe_cc = std::string{(const char *)binary_input,
                                    sizeof(binary_input)};
-    auto response = mk::collector::open(request);
+    mk::collector::Settings settings;
+    auto response = mk::collector::open(request, settings);
     REQUIRE(!response.good);
   }
 
   SECTION("On network error") {
     MKMOCK_WITH_ENABLED_HOOK(open_response_error, CURL_LAST, {
       mk::collector::OpenRequest request;
-      auto response = mk::collector::open(request);
+      mk::collector::Settings settings;
+      auto response = mk::collector::open(request, settings);
       REQUIRE(!response.good);
     });
   }
@@ -57,7 +59,8 @@ TEST_CASE("We deal with open errors") {
     MKMOCK_WITH_ENABLED_HOOK(open_response_error, 0, {
       MKMOCK_WITH_ENABLED_HOOK(open_response_status_code, 500, {
         mk::collector::OpenRequest request;
-        auto response = mk::collector::open(request);
+        mk::collector::Settings settings;
+        auto response = mk::collector::open(request, settings);
         REQUIRE(!response.good);
       });
     });
@@ -68,7 +71,8 @@ TEST_CASE("We deal with open errors") {
       MKMOCK_WITH_ENABLED_HOOK(open_response_status_code, 200, {
         MKMOCK_WITH_ENABLED_HOOK(open_response_body, "{", {
           mk::collector::OpenRequest request;
-          auto response = mk::collector::open(request);
+          mk::collector::Settings settings;
+          auto response = mk::collector::open(request, settings);
           REQUIRE(!response.good);
         });
       });
@@ -80,42 +84,48 @@ TEST_CASE("We deal with update errors") {
   SECTION("On failure to serialize the request body") {
     mk::collector::UpdateRequest request;
     request.content = "{";  // make content parsing fail
-    auto response = mk::collector::update(request);
+    mk::collector::Settings settings;
+    auto response = mk::collector::update(request, settings);
     REQUIRE(!response.good);
   }
 
   SECTION("When the data_format_version field is missing") {
     mk::collector::UpdateRequest request;
     request.content = "{}";
-    auto response = mk::collector::update(request);
+    mk::collector::Settings settings;
+    auto response = mk::collector::update(request, settings);
     REQUIRE(!response.good);
   }
 
   SECTION("When the data_format_version field is not a string") {
     mk::collector::UpdateRequest request;
     request.content = R"({"data_format_version": []})";
-    auto response = mk::collector::update(request);
+    mk::collector::Settings settings;
+    auto response = mk::collector::update(request, settings);
     REQUIRE(!response.good);
   }
 
   SECTION("When the data_format_version field is inconsistent") {
     mk::collector::UpdateRequest request;
     request.content = R"({"data_format_version": "0.1.0"})";
-    auto response = mk::collector::update(request);
+    mk::collector::Settings settings;
+    auto response = mk::collector::update(request, settings);
     REQUIRE(!response.good);
   }
 
   SECTION("When the report_id field is missing") {
     mk::collector::UpdateRequest request;
     request.content = R"({"data_format_version": "0.2.0"})";
-    auto response = mk::collector::update(request);
+    mk::collector::Settings settings;
+    auto response = mk::collector::update(request, settings);
     REQUIRE(!response.good);
   }
 
   SECTION("When the report_id field is not a string") {
     mk::collector::UpdateRequest request;
     request.content = R"({"data_format_version": "0.2.0", "report_id": []})";
-    auto response = mk::collector::update(request);
+    mk::collector::Settings settings;
+    auto response = mk::collector::update(request, settings);
     REQUIRE(!response.good);
   }
 
@@ -125,7 +135,8 @@ TEST_CASE("We deal with update errors") {
     mk::collector::UpdateRequest request;
     request.report_id = report_id;
     request.content = R"({"data_format_version": "0.2.0", "report_id": "xx"})";
-    auto response = mk::collector::update(request);
+    mk::collector::Settings settings;
+    auto response = mk::collector::update(request, settings);
     REQUIRE(!response.good);
   }
 
@@ -139,7 +150,8 @@ TEST_CASE("We deal with update errors") {
       mk::collector::UpdateRequest request;
       request.content = minimal_good_content;
       request.report_id = report_id;
-      auto response = mk::collector::update(request);
+      mk::collector::Settings settings;
+      auto response = mk::collector::update(request, settings);
       REQUIRE(!response.good);
     });
   }
@@ -150,7 +162,8 @@ TEST_CASE("We deal with update errors") {
         mk::collector::UpdateRequest request;
         request.content = minimal_good_content;
         request.report_id = report_id;
-        auto response = mk::collector::update(request);
+        mk::collector::Settings settings;
+        auto response = mk::collector::update(request, settings);
         REQUIRE(!response.good);
       });
     });
@@ -161,7 +174,8 @@ TEST_CASE("We deal with close errors") {
   SECTION("On network error") {
     MKMOCK_WITH_ENABLED_HOOK(close_response_error, CURL_LAST, {
       mk::collector::CloseRequest request;
-      auto response = mk::collector::close(request);
+      mk::collector::Settings settings;
+      auto response = mk::collector::close(request, settings);
       REQUIRE(!response.good);
     });
   }
@@ -170,7 +184,8 @@ TEST_CASE("We deal with close errors") {
     MKMOCK_WITH_ENABLED_HOOK(close_response_error, 0, {
       MKMOCK_WITH_ENABLED_HOOK(close_response_status_code, 500, {
         mk::collector::CloseRequest request;
-        auto response = mk::collector::close(request);
+        mk::collector::Settings settings;
+        auto response = mk::collector::close(request, settings);
         REQUIRE(!response.good);
       });
     });
