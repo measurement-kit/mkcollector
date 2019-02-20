@@ -124,6 +124,7 @@ CloseResponse close(const CloseRequest &request) noexcept;
 // symbol. If you only care about API, you can stop reading here.
 #ifdef MKCOLLECTOR_INLINE_IMPL
 
+#include <stdexcept>
 #include <sstream>
 
 #include "json.hpp"
@@ -224,7 +225,18 @@ UpdateResponse update(const UpdateRequest &request) noexcept {
     nlohmann::json doc;
     doc["format"] = "json";
     try {
-      doc["content"] = nlohmann::json::parse(request.content);
+      auto content = nlohmann::json::parse(request.content);
+      // Implementation note: the following checks rely on the fact that
+      // we're inside a try...catch block and nlohmann/json will throw if
+      // content is not an object, a field is missing, etc. That's also
+      // why we're using throw to leave this block rather than return.
+      if (content.at("data_format_version") != "0.2.0") {
+        throw std::runtime_error("Unsupported data_format_version");
+      }
+      if (content.at("report_id") != request.report_id) {
+        throw std::runtime_error("The report_id is inconsistent");
+      }
+      doc["content"] = std::move(content);
       body = doc.dump();
     } catch (const std::exception &exc) {
       response.logs.push_back(exc.what());

@@ -84,10 +84,61 @@ TEST_CASE("We deal with update errors") {
     REQUIRE(!response.good);
   }
 
+  SECTION("When the data_format_version field is missing") {
+    mk::collector::UpdateRequest request;
+    request.content = "{}";
+    auto response = mk::collector::update(request);
+    REQUIRE(!response.good);
+  }
+
+  SECTION("When the data_format_version field is not a string") {
+    mk::collector::UpdateRequest request;
+    request.content = R"({"data_format_version": []})";
+    auto response = mk::collector::update(request);
+    REQUIRE(!response.good);
+  }
+
+  SECTION("When the data_format_version field is inconsistent") {
+    mk::collector::UpdateRequest request;
+    request.content = R"({"data_format_version": "0.1.0"})";
+    auto response = mk::collector::update(request);
+    REQUIRE(!response.good);
+  }
+
+  SECTION("When the report_id field is missing") {
+    mk::collector::UpdateRequest request;
+    request.content = R"({"data_format_version": "0.2.0"})";
+    auto response = mk::collector::update(request);
+    REQUIRE(!response.good);
+  }
+
+  SECTION("When the report_id field is not a string") {
+    mk::collector::UpdateRequest request;
+    request.content = R"({"data_format_version": "0.2.0", "report_id": []})";
+    auto response = mk::collector::update(request);
+    REQUIRE(!response.good);
+  }
+
+  std::string report_id = "20180208T095233Z_AS15169_O986SVua4krXdAnMx3aGC83INNJAo1GTZII2OwBQx2H4Qx0LKA";
+
+  SECTION("When the report_id field is inconsistent") {
+    mk::collector::UpdateRequest request;
+    request.report_id = report_id;
+    request.content = R"({"data_format_version": "0.2.0", "report_id": "xx"})";
+    auto response = mk::collector::update(request);
+    REQUIRE(!response.good);
+  }
+
+  std::string minimal_good_content = R"({
+    "data_format_version": "0.2.0",
+    "report_id": "20180208T095233Z_AS15169_O986SVua4krXdAnMx3aGC83INNJAo1GTZII2OwBQx2H4Qx0LKA"
+  })";
+
   SECTION("On network error") {
     MKMOCK_WITH_ENABLED_HOOK(update_response_error, CURL_LAST, {
       mk::collector::UpdateRequest request;
-      request.content = "{}";  // required to avoid failing in parsing
+      request.content = minimal_good_content;
+      request.report_id = report_id;
       auto response = mk::collector::update(request);
       REQUIRE(!response.good);
     });
@@ -97,7 +148,8 @@ TEST_CASE("We deal with update errors") {
     MKMOCK_WITH_ENABLED_HOOK(update_response_error, 0, {
       MKMOCK_WITH_ENABLED_HOOK(update_response_status_code, 500, {
         mk::collector::UpdateRequest request;
-        request.content = "{}";  // required to avoid failing in parsing
+        request.content = minimal_good_content;
+        request.report_id = report_id;
         auto response = mk::collector::update(request);
         REQUIRE(!response.good);
       });
