@@ -191,3 +191,31 @@ TEST_CASE("We deal with close errors") {
     });
   }
 }
+
+TEST_CASE("open_request_from_measurement works as expected") {
+  SECTION("with good input") {
+    auto str = R"({
+      "probe_asn": "AS0",
+      "probe_cc": "ZZ",
+      "software_name": "mkcollector",
+      "software_version": "0.0.1",
+      "test_name": "dummy",
+      "test_start_time": "2018-11-01 15:33:17",
+      "test_version": "0.0.1"
+    })";
+    auto re = mk::collector::open_request_from_measurement(str);
+    REQUIRE(re.good);
+    REQUIRE(re.value.probe_asn == "AS0");
+    REQUIRE(re.value.probe_cc == "ZZ");
+    REQUIRE(re.value.software_name == "mkcollector");
+    REQUIRE(re.value.software_version == "0.0.1");
+    REQUIRE(re.value.test_name == "dummy");
+    REQUIRE(re.value.test_start_time == "2018-11-01 15:33:17");
+    REQUIRE(re.value.test_version == "0.0.1");
+  }
+
+  SECTION("with bad input") {
+    auto re = mk::collector::open_request_from_measurement("{}");
+    REQUIRE(!re.good);
+  }
+}

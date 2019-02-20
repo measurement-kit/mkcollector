@@ -25,6 +25,20 @@ class Settings {
   int64_t timeout = 30;
 };
 
+/// LoadResult is the result of loading a structure from JSON.
+template <typename Type>
+class LoadResult {
+ public:
+  /// good indicates whether loading succeeded.
+  bool good = false;
+
+  /// reason indicates the failure reason on failure.
+  std::string reason;
+
+  /// value is the parsed value on success.
+  Type value = {};
+};
+
 /// OpenRequest is a request to open a report with a collector.
 class OpenRequest {
  public:
@@ -43,12 +57,18 @@ class OpenRequest {
   /// test_name is the nettest name
   std::string test_name;
 
-  /// test_version is the nettest version
-  std::string test_version;
-
   /// test_start_time is the time when the test started
   std::string test_start_time;
+
+  /// test_version is the nettest version
+  std::string test_version;
 };
+
+/// open_request_from_measurement initializes an OpenRequest structure
+/// from an existing @p measurement. This is the function that you want
+/// to call when you want to resubmit a specific measurement.
+LoadResult<OpenRequest> open_request_from_measurement(
+    const std::string &measurement) noexcept;
 
 /// OpenResponse is the response to an open request.
 struct OpenResponse {
@@ -135,6 +155,27 @@ static void log_body(const std::string &prefix, const std::string &body,
   std::stringstream ss;
   ss << prefix << " body: " << body;
   logs.push_back(ss.str());
+}
+
+LoadResult<OpenRequest> open_request_from_measurement(
+    const std::string &measurement) noexcept {
+  LoadResult<OpenRequest> result;
+  nlohmann::json doc;
+  try {
+    doc = nlohmann::json::parse(measurement);
+    doc.at("probe_asn").get_to(result.value.probe_asn);
+    doc.at("probe_cc").get_to(result.value.probe_cc);
+    doc.at("software_name").get_to(result.value.software_name);
+    doc.at("software_version").get_to(result.value.software_version);
+    doc.at("test_name").get_to(result.value.test_name);
+    doc.at("test_start_time").get_to(result.value.test_start_time);
+    doc.at("test_version").get_to(result.value.test_version);
+  } catch (const std::exception &exc) {
+    result.reason = exc.what();
+    return result;
+  }
+  result.good = true;
+  return result;
 }
 
 OpenResponse open(const OpenRequest &request,
