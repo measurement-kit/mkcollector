@@ -11,7 +11,7 @@
 #include "json.hpp"
 
 static std::string collector_baseurl() {
-  return "https://collector-sandbox.ooni.io";
+  return "https://b.collector.ooni.io";
 }
 
 static std::string open_report() {
