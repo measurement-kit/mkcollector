@@ -203,7 +203,8 @@ TEST_CASE("open_request_from_measurement works as expected") {
       "test_start_time": "2018-11-01 15:33:17",
       "test_version": "0.0.1"
     })";
-    auto re = mk::collector::open_request_from_measurement(str);
+    auto re = mk::collector::open_request_from_measurement(
+        str, "mkcollector", "0.0.1");
     REQUIRE(re.good);
     REQUIRE(re.value.probe_asn == "AS0");
     REQUIRE(re.value.probe_cc == "ZZ");
@@ -215,7 +216,8 @@ TEST_CASE("open_request_from_measurement works as expected") {
   }
 
   SECTION("with bad input") {
-    auto re = mk::collector::open_request_from_measurement("{}");
+    auto re = mk::collector::open_request_from_measurement(
+        "{}", "mkcollector", "0.0.1");
     REQUIRE(!re.good);
   }
 }

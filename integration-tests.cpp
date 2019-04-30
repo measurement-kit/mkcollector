@@ -107,3 +107,39 @@ TEST_CASE("We can open, update, and close a report") {
   }
   REQUIRE(re.good);
 }
+
+// See https://ooni.torproject.org/post/ooni-probe-android-200-incident/ to
+// understand why it's important to add this test here:
+TEST_CASE("We work around the ooniprobe-android 2.0.0 upload bug") {
+  auto str = R"({
+      "probe_asn": "AS0",
+      "probe_cc": "ZZ",
+      "software_name": "ooniprobe-android",
+      "software_version": "2.0.0",
+      "test_name": "dummy",
+      "test_start_time": "2018-11-01 15:33:17",
+      "test_version": "0.0.1"
+    })";
+  mk::collector::Settings settings;
+  settings.base_url = "https://b.collector.ooni.io";
+  settings.ca_bundle_path = ".mkbuild/data/cacert.pem";
+
+  SECTION("and we can submit when we're v2.0.1") {
+    auto request = mk::collector::open_request_from_measurement(
+        str, "ooniprobe-android", "2.0.1");
+    REQUIRE(request.good);
+    auto response = mk::collector::open(request.value, settings);
+    REQUIRE(response.good);
+  }
+
+  SECTION("and we cannot submit when we're v2.0.0") {
+    auto request = mk::collector::open_request_from_measurement(
+        str, "ooniprobe-android", "2.0.0");
+    REQUIRE(request.good);
+    auto response = mk::collector::open(request.value, settings);
+    REQUIRE(!response.good);
+    for (auto &log : response.logs) {
+      std::clog << log << std::endl;
+    }
+  }
+}
