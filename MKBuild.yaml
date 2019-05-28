@@ -3,9 +3,9 @@ name: mkcollector
 docker: bassosimone/mk-debian
 
 dependencies:
-- curl.haxx.se/ca
 - github.com/catchorg/catch2
 - github.com/curl/curl
+- github.com/measurement-kit/generic-assets
 - github.com/measurement-kit/mkcurl
 - github.com/measurement-kit/mkmock
 - github.com/nlohmann/json

@@ -25,7 +25,7 @@ static std::string open_report() {
   r.test_version = "0.0.1";
   r.test_start_time = "2018-11-01 15:33:17";
   s.base_url = collector_baseurl();
-  s.ca_bundle_path = ".mkbuild/data/cacert.pem";
+  s.ca_bundle_path = ".mkbuild/download/ca-bundle.pem";
   s.timeout = 14;
   mk::collector::OpenResponse re = mk::collector::open(r, s);
   {
@@ -73,7 +73,7 @@ static void update_report(std::string report_id) {
   r.report_id = report_id;
   r.content = dummy_report(report_id);
   s.base_url = collector_baseurl();
-  s.ca_bundle_path = ".mkbuild/data/cacert.pem";
+  s.ca_bundle_path = ".mkbuild/download/ca-bundle.pem";
   s.timeout = 14;
   mk::collector::UpdateResponse re = mk::collector::update(r, s);
   {
@@ -94,7 +94,7 @@ TEST_CASE("We can open, update, and close a report") {
   mk::collector::Settings s;
   r.report_id = report_id;
   s.base_url = collector_baseurl();
-  s.ca_bundle_path = ".mkbuild/data/cacert.pem";
+  s.ca_bundle_path = ".mkbuild/download/ca-bundle.pem";
   s.timeout = 14;
   mk::collector::CloseResponse re = mk::collector::close(r, s);
   {
@@ -122,7 +122,7 @@ TEST_CASE("We work around the ooniprobe-android 2.0.0 upload bug") {
     })";
   mk::collector::Settings settings;
   settings.base_url = "https://b.collector.ooni.io";
-  settings.ca_bundle_path = ".mkbuild/data/cacert.pem";
+  settings.ca_bundle_path = ".mkbuild/download/ca-bundle.pem";
 
   SECTION("and we can submit when we're v2.0.1") {
     auto request = mk::collector::open_request_from_measurement(
