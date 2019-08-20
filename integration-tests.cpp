@@ -1,9 +1,12 @@
+#define MKCURL_INLINE_IMPL
+#include "mkcurl.hpp"
+
+#define MKBOUNCER_INLINE_IMPL
+#include "mkbouncer.hpp"
+
 #include "mkcollector.hpp"
 
 #include <iostream>
-
-#define MKCURL_INLINE_IMPL
-#include "mkcurl.hpp"
 
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
@@ -41,12 +44,19 @@ static std::string open_report() {
   return re.report_id;
 }
 
-static std::string dummy_report(std::string report_id) {
+static std::string dummy_measurement_with_input_and_nettest_name(
+    std::string report_id, const char *input, const char *nettest_name) {
   nlohmann::json doc;
   doc["annotations"] = nlohmann::json::object();
   doc["data_format_version"] = "0.2.0";
   doc["id"] = "bdd20d7a-bba5-40dd-a111-9863d7908572";
-  doc["input"] = nullptr;
+  // The following pattern is required because we want to set `input` to
+  // untyped `null` in case it's not a string.
+  if (input != nullptr) {
+    doc["input"] = input;
+  } else {
+    doc["input"] = nullptr;
+  }
   doc["input_hashes"] = nlohmann::json::array();
   doc["measurement_start_time"] = "2018-11-01 15:33:20";
   doc["options"] = nlohmann::json::array();
@@ -60,18 +70,28 @@ static std::string dummy_report(std::string report_id) {
   doc["test_helpers"] = nlohmann::json::array();
   doc["test_keys"] = nlohmann::json::object();
   doc["test_keys"]["client_resolver"] = "91.80.37.104";
-  doc["test_name"] = "dummy";
+  doc["test_name"] = nettest_name;
   doc["test_runtime"] = 5.0565230846405;
   doc["test_start_time"] = "2018-11-01 15:33:17";
   doc["test_version"] = "0.0.1";
   return doc.dump();
 }
 
+static std::string dummy_measurement_with_input(
+    std::string report_id, const char *input) {
+  return dummy_measurement_with_input_and_nettest_name(
+      std::move(report_id), input, "dummy");
+}
+
+static std::string dummy_measurement(std::string report_id) {
+  return dummy_measurement_with_input(std::move(report_id), nullptr);
+}
+
 static void update_report(std::string report_id) {
   mk::collector::UpdateRequest r;
   mk::collector::Settings s;
   r.report_id = report_id;
-  r.content = dummy_report(report_id);
+  r.content = dummy_measurement(report_id);
   s.base_url = collector_baseurl();
   s.ca_bundle_path = ".mkbuild/download/ca-bundle.pem";
   s.timeout = 14;
@@ -142,4 +162,105 @@ TEST_CASE("We work around the ooniprobe-android 2.0.0 upload bug") {
       std::clog << log << std::endl;
     }
   }
+}
+
+static mk::collector::Reporter::Stats
+resubmit(mk::collector::Reporter &reporter, std::string measurement) {
+  mk::collector::Reporter::Stats stats;
+  std::vector<std::string> logs;
+  auto good = reporter.maybe_discover_and_submit_with_stats(
+      measurement, logs, 0, stats);
+  REQUIRE(logs.size() > 0);
+  for (auto &log : logs) {
+    std::clog << log << std::endl;
+  }
+  REQUIRE(good);
+  auto report_id = reporter.report_id();
+  REQUIRE(nlohmann::json::parse(measurement)["report_id"] == report_id);
+  return stats;
+}
+
+TEST_CASE("Reporter works correctly") {
+  SECTION("for a single measurement re-submission") {
+    mk::collector::Reporter reporter{"mkcollector-tests", "0.1.0"};
+    {
+      auto stats = resubmit(
+          reporter, dummy_measurement("")  // with empty report ID
+      );
+      REQUIRE(stats == (mk::collector::Reporter::Stats{
+                           "bouncer_okay",       // because URL configured
+                           "load_request_okay",  // should load the json
+                           "open_report_okay",   // should open the report
+                           "update_report_okay"  // should submit the json
+                       }));
+    }
+  }
+
+  SECTION("for multiple measurements re-submission across reports") {
+    mk::collector::Reporter reporter{"mkcollector-tests", "0.1.0"};
+    {
+      auto stats = resubmit(
+          reporter, dummy_measurement_with_input("", "A")  // empty report ID
+      );
+      REQUIRE(stats == (mk::collector::Reporter::Stats{
+                           "bouncer_okay",       // because URL configured
+                           "load_request_okay",  // should load the json
+                           "open_report_okay",   // should open the report
+                           "update_report_okay"  // should submit the json
+                       }));
+    }
+    std::string cur_report_id = reporter.report_id();
+    {
+      auto stats = resubmit(
+          reporter, dummy_measurement_with_input("", "A")  // empty report ID
+      );
+      REQUIRE(stats == (mk::collector::Reporter::Stats{
+                           "load_request_okay",  // should load the json
+                           "update_report_okay"  // should submit the json
+                       }));
+    }
+    REQUIRE(reporter.report_id() == cur_report_id);
+    {
+      auto stats = resubmit(
+          reporter, dummy_measurement_with_input_and_nettest_name(
+            "X", "A", "zazzo")  // other nettest name, should be new report
+      );
+      REQUIRE(stats == (mk::collector::Reporter::Stats{
+                           "load_request_okay",  // should load the json
+                           "close_report_okay",  // should close the report
+                           "open_report_okay",   // should open the report
+                           "update_report_okay"  // should submit the json
+                       }));
+    }
+    REQUIRE(reporter.report_id() != cur_report_id);
+    REQUIRE(reporter.report_id() != "");
+  }
+}
+
+TEST_CASE("OpenRequest::operator!= works") {
+  using namespace mk::collector;
+#define XX(name_)                  \
+  {                                \
+    OpenRequest left{};            \
+    left.name_ = "x";              \
+    OpenRequest right{};           \
+    REQUIRE(left != right);        \
+  }
+  MKCOLLECTOR_OPEN_REQUEST_ENUM(XX)
+#undef XX
+  REQUIRE(!(OpenRequest{} != OpenRequest{}));
+}
+
+TEST_CASE("Reporter::Stats::operator== works") {
+  using namespace mk::collector;
+#define XX(name_)              \
+  {                            \
+    Reporter::Stats left{};    \
+    left.name_ = 1;            \
+    Reporter::Stats right{};   \
+    REQUIRE(!(left == right)); \
+  }
+  MKCOLLECTOR_REPORTER_STATS_ENUM(XX)
+#undef XX
+  REQUIRE(Reporter::Stats{} == Reporter::Stats{});
 }

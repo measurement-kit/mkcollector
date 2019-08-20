@@ -11,11 +11,35 @@ MKMOCK_DEFINE_HOOK(close_response_status_code, int64_t);
 #define MKCURL_INLINE_IMPL
 #include "mkcurl.hpp"
 
+#define MKBOUNCER_INLINE_IMPL
+#include "mkbouncer.hpp"
+
+MKMOCK_DEFINE_HOOK(bouncer_response_good, bool);
+MKMOCK_DEFINE_HOOK(
+    bouncer_response_collectors, std::vector<mk::bouncer::Record>);
+MKMOCK_DEFINE_HOOK(reporter_close_response_good, bool);
+MKMOCK_DEFINE_HOOK(reporter_open_response_good, bool);
+MKMOCK_DEFINE_HOOK(reporter_open_response_report_id, std::string);
+MKMOCK_DEFINE_HOOK(reporter_update_response_good, bool);
+
 #define MKCOLLECTOR_MOCK
 #define MKCOLLECTOR_INLINE_IMPL
 #include "mkcollector.hpp"
 
 #include <iostream>
+
+// You may want this commented out function for debugging
+/*
+inline std::ostream &operator<<(
+    std::ostream &os, const mk::collector::Reporter::Stats &stats) {
+  nlohmann::json jsondoc;
+#define XX(name_) jsondoc[#name_] = stats.name_;
+  MKCOLLECTOR_REPORTER_STATS_ENUM(XX)
+#undef XX
+  os << jsondoc.dump();
+  return os;
+}
+*/
 
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
@@ -220,4 +244,141 @@ TEST_CASE("open_request_from_measurement works as expected") {
         "{}", "mkcollector", "0.0.1");
     REQUIRE(!re.good);
   }
+}
+
+static mk::collector::Reporter::Stats
+submit_and_expect_false(std::string measurement) noexcept {
+  mk::collector::Reporter reporter{"mkcollector-unit-tests", "0.0.1"};
+  mk::collector::Reporter::Stats stats;
+  std::vector<std::string> logs;
+  REQUIRE(reporter.maybe_discover_and_submit_with_stats(
+        measurement, logs, 0, stats) == false);
+  return stats;
+}
+
+// TODO(bassosimone): share the following utility functions between this
+// file and the integration-tests.cpp file?
+
+static std::string dummy_measurement_with_nettest_name(
+    std::string report_id, const char *nettest_name) {
+  nlohmann::json doc;
+  doc["annotations"] = nlohmann::json::object();
+  doc["data_format_version"] = "0.2.0";
+  doc["id"] = "bdd20d7a-bba5-40dd-a111-9863d7908572";
+  doc["input"] = nullptr;
+  doc["input_hashes"] = nlohmann::json::array();
+  doc["measurement_start_time"] = "2018-11-01 15:33:20";
+  doc["options"] = nlohmann::json::array();
+  doc["probe_asn"] = "AS0";
+  doc["probe_cc"] = "ZZ";
+  doc["probe_city"] = nullptr;
+  doc["probe_ip"] = "127.0.0.1";
+  doc["report_id"] = report_id;
+  doc["software_name"] = "mkcollector";
+  doc["software_version"] = "0.0.1";
+  doc["test_helpers"] = nlohmann::json::array();
+  doc["test_keys"] = nlohmann::json::object();
+  doc["test_keys"]["client_resolver"] = "91.80.37.104";
+  doc["test_name"] = nettest_name;
+  doc["test_runtime"] = 5.0565230846405;
+  doc["test_start_time"] = "2018-11-01 15:33:17";
+  doc["test_version"] = "0.0.1";
+  return doc.dump();
+}
+
+static std::string dummy_measurement(std::string report_id) {
+  return dummy_measurement_with_nettest_name(std::move(report_id), "dummy");
+}
+
+TEST_CASE("Reporter::submit_with_stats works as expected") {
+  SECTION("When the bouncer fails") {
+    MKMOCK_WITH_ENABLED_HOOK(bouncer_response_good, false, {
+      auto stats = submit_and_expect_false("");
+      REQUIRE(stats == (mk::collector::Reporter::Stats{"bouncer_error"}));
+    });
+  }
+
+  SECTION("When no suitable bouncer is found") {
+    MKMOCK_WITH_ENABLED_HOOK(bouncer_response_collectors, {}, {
+      auto stats = submit_and_expect_false("");
+      REQUIRE(stats == (mk::collector::Reporter::Stats{"bouncer_no_collectors"}));
+    });
+  }
+
+  SECTION("When we cannot load the measurement") {
+    auto stats = submit_and_expect_false("{");
+    REQUIRE(stats == (mk::collector::Reporter::Stats{
+                         "bouncer_okay", "load_request_error"}));
+  }
+
+  SECTION("When we cannot open a report") {
+    MKMOCK_WITH_ENABLED_HOOK(reporter_open_response_good, false, {
+      auto stats = submit_and_expect_false(dummy_measurement(""));
+      REQUIRE(stats == (mk::collector::Reporter::Stats{
+                           "bouncer_okay", "load_request_okay", "open_report_error"}));
+    });
+  }
+
+  SECTION("When the report ID is empty") {
+    MKMOCK_WITH_ENABLED_HOOK(reporter_open_response_report_id, "", {
+      auto stats = submit_and_expect_false(dummy_measurement(""));
+      REQUIRE(stats == (mk::collector::Reporter::Stats{
+                           "bouncer_okay", "load_request_okay", "report_id_empty"}));
+    });
+  }
+
+  SECTION("When we cannot update the report") {
+    MKMOCK_WITH_ENABLED_HOOK(reporter_update_response_good, false, {
+      auto stats = submit_and_expect_false(dummy_measurement(""));
+      REQUIRE(stats == (mk::collector::Reporter::Stats{
+                           "bouncer_okay", "load_request_okay", "open_report_okay",
+                           "update_report_error"}));
+    });
+  }
+
+  SECTION("When we cannot close the previously open report") {
+    // must be here because there are too many macros for Visual Studio to
+    // be able to compile this code if I put it inside the MKMOCK_WITH...
+    // block. (Or maybe _my_ macros are not standard? :-).
+    auto testcore = []() {
+      mk::collector::Reporter reporter{"mkcollector-unit-tests", "0.0.1"};
+      mk::collector::Reporter::Stats stats;
+      std::vector<std::string> logs;
+      auto measurement = dummy_measurement_with_nettest_name("", "dummy");
+      REQUIRE(reporter.maybe_discover_and_submit_with_stats(
+            measurement, logs, 0, stats) == true);
+      REQUIRE(stats == (mk::collector::Reporter::Stats{
+                           "bouncer_okay", "load_request_okay", "open_report_okay",
+                           "update_report_okay"}));
+      measurement = dummy_measurement_with_nettest_name( "", "gummy");
+      stats = {}; // clear the stats
+      REQUIRE(reporter.maybe_discover_and_submit_with_stats(
+            measurement, logs, 0, stats) == true);
+      REQUIRE(stats == (mk::collector::Reporter::Stats{
+                           "load_request_okay", "close_report_error",
+                           "open_report_okay",
+                           "update_report_okay"}));
+    };
+    MKMOCK_WITH_ENABLED_HOOK(reporter_close_response_good, false, {
+      testcore();
+    });
+  }
+
+  SECTION("When for some weird reason we cannot reserialize a measurement") {
+    auto rid = std::string{(const char *)binary_input, sizeof(binary_input)};
+    MKMOCK_WITH_ENABLED_HOOK(reporter_open_response_report_id, rid, {
+      auto stats = submit_and_expect_false(dummy_measurement(""));
+      REQUIRE(stats == (mk::collector::Reporter::Stats{
+                           "bouncer_okay", "load_request_okay",
+                           "open_report_okay", "serialize_measurement_error"}));
+    });
+  }
+}
+
+TEST_CASE("Reporter::submit is covered") {
+  mk::collector::Reporter reporter{"mkcollector-unit-tests", "0.0.1"};
+  std::vector<std::string> logs;
+  std::string measurement = "{{{{";
+  auto good = reporter.maybe_discover_and_submit(measurement, logs);
+  REQUIRE(good == false); // should fail with parse error
 }

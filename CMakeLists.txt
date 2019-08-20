@@ -138,24 +138,46 @@ if("${FAILURE_5430}")
 endif()
 
 #
+# mkbouncer.hpp
+#
+
+message(STATUS "mkdirAll: ${CMAKE_BINARY_DIR}/.mkbuild/include")
+execute_process(COMMAND
+  ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/.mkbuild/include"
+  RESULT_VARIABLE FAILURE_5720)
+if("${FAILURE_5720}")
+  message(FATAL_ERROR "${FAILURE_5720}")
+endif()
+message(STATUS "download: https://raw.githubusercontent.com/measurement-kit/mkbouncer/v0.2.0/mkbouncer.hpp")
+file(DOWNLOAD https://raw.githubusercontent.com/measurement-kit/mkbouncer/v0.2.0/mkbouncer.hpp
+  "${CMAKE_BINARY_DIR}/.mkbuild/include/mkbouncer.hpp"
+  EXPECTED_HASH SHA256=1317cf389fad9b4a262bfc61bd15f42c5f988582f0ecc426497eb13791ea50e4
+  TLS_VERIFY ON)
+LIST(APPEND CMAKE_REQUIRED_INCLUDES "${CMAKE_BINARY_DIR}/.mkbuild/include")
+CHECK_INCLUDE_FILE_CXX("mkbouncer.hpp" MK_HAVE_HEADER_6263)
+if(NOT ("${MK_HAVE_HEADER_6263}"))
+  message(FATAL_ERROR "cannot find: mkbouncer.hpp")
+endif()
+
+#
 # mkcurl.hpp
 #
 
 message(STATUS "mkdirAll: ${CMAKE_BINARY_DIR}/.mkbuild/include")
 execute_process(COMMAND
   ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/.mkbuild/include"
-  RESULT_VARIABLE FAILURE_5717)
-if("${FAILURE_5717}")
-  message(FATAL_ERROR "${FAILURE_5717}")
+  RESULT_VARIABLE FAILURE_6602)
+if("${FAILURE_6602}")
+  message(FATAL_ERROR "${FAILURE_6602}")
 endif()
-message(STATUS "download: https://raw.githubusercontent.com/measurement-kit/mkcurl/v0.10.0/mkcurl.hpp")
-file(DOWNLOAD https://raw.githubusercontent.com/measurement-kit/mkcurl/v0.10.0/mkcurl.hpp
+message(STATUS "download: https://raw.githubusercontent.com/measurement-kit/mkcurl/v0.12.0/mkcurl.hpp")
+file(DOWNLOAD https://raw.githubusercontent.com/measurement-kit/mkcurl/v0.12.0/mkcurl.hpp
   "${CMAKE_BINARY_DIR}/.mkbuild/include/mkcurl.hpp"
-  EXPECTED_HASH SHA256=2248b8a1e597bd7d1970138291ecd9a7d0c2070a50431c82e8499cc9529480f1
+  EXPECTED_HASH SHA256=cb58b85ccdf8d9f3b559ccab7d2f31cad4f8aba774e9953534e32373d415ec94
   TLS_VERIFY ON)
 LIST(APPEND CMAKE_REQUIRED_INCLUDES "${CMAKE_BINARY_DIR}/.mkbuild/include")
-CHECK_INCLUDE_FILE_CXX("mkcurl.hpp" MK_HAVE_HEADER_6247)
-if(NOT ("${MK_HAVE_HEADER_6247}"))
+CHECK_INCLUDE_FILE_CXX("mkcurl.hpp" MK_HAVE_HEADER_7132)
+if(NOT ("${MK_HAVE_HEADER_7132}"))
   message(FATAL_ERROR "cannot find: mkcurl.hpp")
 endif()
 
@@ -166,9 +188,9 @@ endif()
 message(STATUS "mkdirAll: ${CMAKE_BINARY_DIR}/.mkbuild/include")
 execute_process(COMMAND
   ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/.mkbuild/include"
-  RESULT_VARIABLE FAILURE_6580)
-if("${FAILURE_6580}")
-  message(FATAL_ERROR "${FAILURE_6580}")
+  RESULT_VARIABLE FAILURE_7465)
+if("${FAILURE_7465}")
+  message(FATAL_ERROR "${FAILURE_7465}")
 endif()
 message(STATUS "download: https://raw.githubusercontent.com/measurement-kit/mkmock/v0.2.0/mkmock.hpp")
 file(DOWNLOAD https://raw.githubusercontent.com/measurement-kit/mkmock/v0.2.0/mkmock.hpp
@@ -176,8 +198,8 @@ file(DOWNLOAD https://raw.githubusercontent.com/measurement-kit/mkmock/v0.2.0/mk
   EXPECTED_HASH SHA256=f07bc063a2e64484482f986501003e45ead653ea3f53fadbdb45c17a51d916d2
   TLS_VERIFY ON)
 LIST(APPEND CMAKE_REQUIRED_INCLUDES "${CMAKE_BINARY_DIR}/.mkbuild/include")
-CHECK_INCLUDE_FILE_CXX("mkmock.hpp" MK_HAVE_HEADER_7108)
-if(NOT ("${MK_HAVE_HEADER_7108}"))
+CHECK_INCLUDE_FILE_CXX("mkmock.hpp" MK_HAVE_HEADER_7993)
+if(NOT ("${MK_HAVE_HEADER_7993}"))
   message(FATAL_ERROR "cannot find: mkmock.hpp")
 endif()
 
@@ -188,9 +210,9 @@ endif()
 message(STATUS "mkdirAll: ${CMAKE_BINARY_DIR}/.mkbuild/include")
 execute_process(COMMAND
   ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/.mkbuild/include"
-  RESULT_VARIABLE FAILURE_7439)
-if("${FAILURE_7439}")
-  message(FATAL_ERROR "${FAILURE_7439}")
+  RESULT_VARIABLE FAILURE_8324)
+if("${FAILURE_8324}")
+  message(FATAL_ERROR "${FAILURE_8324}")
 endif()
 message(STATUS "download: https://raw.githubusercontent.com/nlohmann/json/v3.6.1/single_include/nlohmann/json.hpp")
 file(DOWNLOAD https://raw.githubusercontent.com/nlohmann/json/v3.6.1/single_include/nlohmann/json.hpp
@@ -198,8 +220,8 @@ file(DOWNLOAD https://raw.githubusercontent.com/nlohmann/json/v3.6.1/single_incl
   EXPECTED_HASH SHA256=d2eeb25d2e95bffeb08ebb7704cdffd2e8fca7113eba9a0b38d60a5c391ea09a
   TLS_VERIFY ON)
 LIST(APPEND CMAKE_REQUIRED_INCLUDES "${CMAKE_BINARY_DIR}/.mkbuild/include")
-CHECK_INCLUDE_FILE_CXX("json.hpp" MK_HAVE_HEADER_7991)
-if(NOT ("${MK_HAVE_HEADER_7991}"))
+CHECK_INCLUDE_FILE_CXX("json.hpp" MK_HAVE_HEADER_8876)
+if(NOT ("${MK_HAVE_HEADER_8876}"))
   message(FATAL_ERROR "cannot find: json.hpp")
 endif()
 
@@ -232,10 +254,10 @@ macro(MKSetRestrictiveCompilerFlags)
     if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
       set(MK_COMMON_FLAGS "${MK_COMMON_FLAGS} -Wtrampolines")
     endif()
-    set(MK_COMMON_FLAGS "${MK_COMMON_FLAGS} -Woverloaded-virtual")
-    set(MK_COMMON_FLAGS "${MK_COMMON_FLAGS} -Wreorder")
-    set(MK_COMMON_FLAGS "${MK_COMMON_FLAGS} -Wsign-promo")
-    set(MK_COMMON_FLAGS "${MK_COMMON_FLAGS} -Wnon-virtual-dtor")
+    set(MK_CXX_FLAGS "${MK_CXX_FLAGS} -Woverloaded-virtual")
+    set(MK_CXX_FLAGS "${MK_CXX_FLAGS} -Wreorder")
+    set(MK_CXX_FLAGS "${MK_CXX_FLAGS} -Wsign-promo")
+    set(MK_CXX_FLAGS "${MK_CXX_FLAGS} -Wnon-virtual-dtor")
     set(MK_COMMON_FLAGS "${MK_COMMON_FLAGS} -fstack-protector-all")
     if(NOT "${APPLE}" AND NOT "${MINGW}")
       set(MK_LD_FLAGS "${MK_LD_FLAGS} -Wl,-z,noexecstack")
