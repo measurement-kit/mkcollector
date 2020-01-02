@@ -242,6 +242,26 @@ TEST_CASE("Reporter works correctly") {
     REQUIRE(reporter.report_id() != cur_report_id);
     REQUIRE(reporter.report_id() != "");
   }
+
+  SECTION("for a custom URL") {
+    mk::collector::Reporter reporter{"mkcollector-tests", "0.1.0"};
+    {
+      auto url = "https://ps-test.ooni.io";
+      REQUIRE(reporter.base_url() == "");
+      reporter.set_base_url(url);
+      REQUIRE(reporter.base_url() == url);
+    }
+    {
+      auto stats = resubmit(
+          reporter, dummy_measurement("")  // with empty report ID
+      );
+      REQUIRE(stats == (mk::collector::Reporter::Stats{
+                           "load_request_okay",  // should load the json
+                           "open_report_okay",   // should open the report
+                           "update_report_okay"  // should submit the json
+                       }));
+    }
+  }
 }
 
 TEST_CASE("OpenRequest::operator!= works") {
