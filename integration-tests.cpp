@@ -185,6 +185,12 @@ TEST_CASE("Reporter works correctly") {
   SECTION("for a single measurement re-submission") {
     mk::collector::Reporter reporter{"mkcollector-tests", "0.1.0"};
     {
+      auto cabundle = ".mkbuild/download/ca-bundle.pem";
+      REQUIRE(reporter.ca_bundle_path() == "");
+      reporter.set_ca_bundle_path(cabundle);
+      REQUIRE(reporter.ca_bundle_path() == cabundle);
+    }
+    {
       auto stats = resubmit(
           reporter, dummy_measurement("")  // with empty report ID
       );
