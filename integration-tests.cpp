@@ -168,8 +168,9 @@ static mk::collector::Reporter::Stats
 resubmit(mk::collector::Reporter &reporter, std::string measurement) {
   mk::collector::Reporter::Stats stats;
   std::vector<std::string> logs;
-  auto good = reporter.maybe_discover_and_submit_with_stats(
-      measurement, logs, 0, stats);
+  std::string reason;
+  auto good = reporter.maybe_discover_and_submit_with_stats_and_reason(
+      measurement, logs, 0, stats, reason);
   REQUIRE(logs.size() > 0);
   for (auto &log : logs) {
     std::clog << log << std::endl;
