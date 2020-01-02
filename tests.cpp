@@ -60,6 +60,27 @@ const uint8_t binary_input[] = {
 };
 // clang-format on
 
+TEST_CASE("curl_reason_for_failure works") {
+  SECTION("With a real curl error") {
+    mk::curl::Response response;
+    response.error = CURLE_AGAIN;
+    std::string v = mk::collector::curl_reason_for_failure(response);
+    REQUIRE(v == "collector: Socket not ready for send/recv");
+  }
+  SECTION("With an HTTP error") {
+    mk::curl::Response response;
+    response.status_code = 404;
+    std::string v = mk::collector::curl_reason_for_failure(response);
+    REQUIRE(v == "collector: HTTP response code said error");
+  }
+  SECTION("With an unexpected error") {
+    mk::curl::Response response;
+    response.status_code = 200;
+    std::string v = mk::collector::curl_reason_for_failure(response);
+    REQUIRE(v == "collector: unknown libcurl error");
+  }
+}
+
 TEST_CASE("We deal with open errors") {
   SECTION("On failure to serialize the request body") {
     mk::collector::OpenRequest request;
@@ -251,8 +272,9 @@ submit_and_expect_false(std::string measurement) noexcept {
   mk::collector::Reporter reporter{"mkcollector-unit-tests", "0.0.1"};
   mk::collector::Reporter::Stats stats;
   std::vector<std::string> logs;
-  REQUIRE(reporter.maybe_discover_and_submit_with_stats(
-        measurement, logs, 0, stats) == false);
+  std::string reason;
+  REQUIRE(reporter.maybe_discover_and_submit_with_stats_and_reason(
+        measurement, logs, 0, stats, reason) == false);
   return stats;
 }
 
@@ -344,16 +366,17 @@ TEST_CASE("Reporter::submit_with_stats works as expected") {
       mk::collector::Reporter reporter{"mkcollector-unit-tests", "0.0.1"};
       mk::collector::Reporter::Stats stats;
       std::vector<std::string> logs;
+      std::string reason;
       auto measurement = dummy_measurement_with_nettest_name("", "dummy");
-      REQUIRE(reporter.maybe_discover_and_submit_with_stats(
-            measurement, logs, 0, stats) == true);
+      REQUIRE(reporter.maybe_discover_and_submit_with_stats_and_reason(
+            measurement, logs, 0, stats, reason) == true);
       REQUIRE(stats == (mk::collector::Reporter::Stats{
                            "bouncer_okay", "load_request_okay", "open_report_okay",
                            "update_report_okay"}));
       measurement = dummy_measurement_with_nettest_name( "", "gummy");
       stats = {}; // clear the stats
-      REQUIRE(reporter.maybe_discover_and_submit_with_stats(
-            measurement, logs, 0, stats) == true);
+      REQUIRE(reporter.maybe_discover_and_submit_with_stats_and_reason(
+            measurement, logs, 0, stats, reason) == true);
       REQUIRE(stats == (mk::collector::Reporter::Stats{
                            "load_request_okay", "close_report_error",
                            "open_report_okay",

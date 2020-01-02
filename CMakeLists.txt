@@ -41,6 +41,9 @@ if((${APPLE}))
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -L/usr/local/lib")
 endif()
 
+include(CheckFunctionExists)
+include(CheckSymbolExists)
+
 #
 # catch.hpp
 #
@@ -48,9 +51,9 @@ endif()
 message(STATUS "mkdirAll: ${CMAKE_BINARY_DIR}/.mkbuild/include")
 execute_process(COMMAND
   ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/.mkbuild/include"
-  RESULT_VARIABLE FAILURE_1303)
-if("${FAILURE_1303}")
-  message(FATAL_ERROR "${FAILURE_1303}")
+  RESULT_VARIABLE FAILURE_1360)
+if("${FAILURE_1360}")
+  message(FATAL_ERROR "${FAILURE_1360}")
 endif()
 message(STATUS "download: https://github.com/catchorg/Catch2/releases/download/v2.8.0/catch.hpp")
 file(DOWNLOAD https://github.com/catchorg/Catch2/releases/download/v2.8.0/catch.hpp
@@ -58,8 +61,8 @@ file(DOWNLOAD https://github.com/catchorg/Catch2/releases/download/v2.8.0/catch.
   EXPECTED_HASH SHA256=2791047e459b981a1035f4ee16a2ad031f5bfb4ba66487ad4d3fc816c8946f61
   TLS_VERIFY ON)
 LIST(APPEND CMAKE_REQUIRED_INCLUDES "${CMAKE_BINARY_DIR}/.mkbuild/include")
-CHECK_INCLUDE_FILE_CXX("catch.hpp" MK_HAVE_HEADER_1820)
-if(NOT ("${MK_HAVE_HEADER_1820}"))
+CHECK_INCLUDE_FILE_CXX("catch.hpp" MK_HAVE_HEADER_1877)
+if(NOT ("${MK_HAVE_HEADER_1877}"))
   message(FATAL_ERROR "cannot find: catch.hpp")
 endif()
 
@@ -72,9 +75,9 @@ if(("${WIN32}"))
   message(STATUS "mkdirAll: ${CMAKE_BINARY_DIR}/.mkbuild/download")
   execute_process(COMMAND
     ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/.mkbuild/download"
-    RESULT_VARIABLE FAILURE_2201)
-  if("${FAILURE_2201}")
-    message(FATAL_ERROR "${FAILURE_2201}")
+    RESULT_VARIABLE FAILURE_2258)
+  if("${FAILURE_2258}")
+    message(FATAL_ERROR "${FAILURE_2258}")
   endif()
   message(STATUS "download: https://github.com/measurement-kit/prebuilt/releases/download//testing/windows-curl-7.61.1-1.tar.gz")
   file(DOWNLOAD https://github.com/measurement-kit/prebuilt/releases/download//testing/windows-curl-7.61.1-1.tar.gz
@@ -85,28 +88,28 @@ if(("${WIN32}"))
   execute_process(COMMAND
     ${CMAKE_COMMAND} -E tar xf "${CMAKE_BINARY_DIR}/.mkbuild/download/windows-curl-7.61.1-1.tar.gz"
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/.mkbuild/download"
-    RESULT_VARIABLE FAILURE_3024)
-  if("${FAILURE_3024}")
-    message(FATAL_ERROR "${FAILURE_3024}")
+    RESULT_VARIABLE FAILURE_3081)
+  if("${FAILURE_3081}")
+    message(FATAL_ERROR "${FAILURE_3081}")
   endif()
   LIST(APPEND CMAKE_REQUIRED_INCLUDES "${CMAKE_BINARY_DIR}/.mkbuild/download/MK_DIST/windows/curl/7.61.1-1/${MK_WIN32_ARCH}/include")
-  CHECK_INCLUDE_FILE_CXX("curl/curl.h" MK_HAVE_HEADER_3269)
-  if(NOT ("${MK_HAVE_HEADER_3269}"))
+  CHECK_INCLUDE_FILE_CXX("curl/curl.h" MK_HAVE_HEADER_3326)
+  if(NOT ("${MK_HAVE_HEADER_3326}"))
     message(FATAL_ERROR "cannot find: curl/curl.h")
   endif()
-  CHECK_LIBRARY_EXISTS("${CMAKE_BINARY_DIR}/.mkbuild/download/MK_DIST/windows/curl/7.61.1-1/${MK_WIN32_ARCH}/lib/libcurl.lib" "curl_easy_init" "" MK_HAVE_LIB_3428)
-  if(NOT ("${MK_HAVE_LIB_3428}"))
+  CHECK_LIBRARY_EXISTS("${CMAKE_BINARY_DIR}/.mkbuild/download/MK_DIST/windows/curl/7.61.1-1/${MK_WIN32_ARCH}/lib/libcurl.lib" "curl_easy_init" "" MK_HAVE_LIB_3485)
+  if(NOT ("${MK_HAVE_LIB_3485}"))
     message(FATAL_ERROR "cannot find: ${CMAKE_BINARY_DIR}/.mkbuild/download/MK_DIST/windows/curl/7.61.1-1/${MK_WIN32_ARCH}/lib/libcurl.lib")
   endif()
   LIST(APPEND CMAKE_REQUIRED_LIBRARIES "${CMAKE_BINARY_DIR}/.mkbuild/download/MK_DIST/windows/curl/7.61.1-1/${MK_WIN32_ARCH}/lib/libcurl.lib")
   LIST(APPEND CMAKE_REQUIRED_DEFINITIONS -DCURL_STATICLIB)
 else()
-  CHECK_INCLUDE_FILE_CXX("curl/curl.h" MK_HAVE_HEADER_3986)
-  if(NOT ("${MK_HAVE_HEADER_3986}"))
+  CHECK_INCLUDE_FILE_CXX("curl/curl.h" MK_HAVE_HEADER_4043)
+  if(NOT ("${MK_HAVE_HEADER_4043}"))
     message(FATAL_ERROR "cannot find: curl/curl.h")
   endif()
-  CHECK_LIBRARY_EXISTS("curl" "curl_easy_init" "" MK_HAVE_LIB_4145)
-  if(NOT ("${MK_HAVE_LIB_4145}"))
+  CHECK_LIBRARY_EXISTS("curl" "curl_easy_init" "" MK_HAVE_LIB_4202)
+  if(NOT ("${MK_HAVE_LIB_4202}"))
     message(FATAL_ERROR "cannot find: curl")
   endif()
   LIST(APPEND CMAKE_REQUIRED_LIBRARIES "curl")
@@ -119,9 +122,9 @@ endif()
 message(STATUS "mkdirAll: ${CMAKE_BINARY_DIR}/.mkbuild/download")
 execute_process(COMMAND
   ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/.mkbuild/download"
-  RESULT_VARIABLE FAILURE_4569)
-if("${FAILURE_4569}")
-  message(FATAL_ERROR "${FAILURE_4569}")
+  RESULT_VARIABLE FAILURE_4626)
+if("${FAILURE_4626}")
+  message(FATAL_ERROR "${FAILURE_4626}")
 endif()
 message(STATUS "download: https://github.com/measurement-kit/generic-assets/releases/download/20190520205742/generic-assets-20190520205742.tar.gz")
 file(DOWNLOAD https://github.com/measurement-kit/generic-assets/releases/download/20190520205742/generic-assets-20190520205742.tar.gz
@@ -132,9 +135,9 @@ message(STATUS "Extract: ${CMAKE_BINARY_DIR}/.mkbuild/download/generic-assets-20
 execute_process(COMMAND
   ${CMAKE_COMMAND} -E tar xf "${CMAKE_BINARY_DIR}/.mkbuild/download/generic-assets-20190520205742.tar.gz"
   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/.mkbuild/download"
-  RESULT_VARIABLE FAILURE_5430)
-if("${FAILURE_5430}")
-  message(FATAL_ERROR "${FAILURE_5430}")
+  RESULT_VARIABLE FAILURE_5487)
+if("${FAILURE_5487}")
+  message(FATAL_ERROR "${FAILURE_5487}")
 endif()
 
 #
@@ -144,18 +147,18 @@ endif()
 message(STATUS "mkdirAll: ${CMAKE_BINARY_DIR}/.mkbuild/include")
 execute_process(COMMAND
   ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/.mkbuild/include"
-  RESULT_VARIABLE FAILURE_5720)
-if("${FAILURE_5720}")
-  message(FATAL_ERROR "${FAILURE_5720}")
+  RESULT_VARIABLE FAILURE_5777)
+if("${FAILURE_5777}")
+  message(FATAL_ERROR "${FAILURE_5777}")
 endif()
-message(STATUS "download: https://raw.githubusercontent.com/measurement-kit/mkbouncer/v0.2.0/mkbouncer.hpp")
-file(DOWNLOAD https://raw.githubusercontent.com/measurement-kit/mkbouncer/v0.2.0/mkbouncer.hpp
+message(STATUS "download: https://raw.githubusercontent.com/measurement-kit/mkbouncer/v0.3.0/mkbouncer.hpp")
+file(DOWNLOAD https://raw.githubusercontent.com/measurement-kit/mkbouncer/v0.3.0/mkbouncer.hpp
   "${CMAKE_BINARY_DIR}/.mkbuild/include/mkbouncer.hpp"
-  EXPECTED_HASH SHA256=1317cf389fad9b4a262bfc61bd15f42c5f988582f0ecc426497eb13791ea50e4
+  EXPECTED_HASH SHA256=7c0a810d58fdbc1ffdacb0eed442d31ebff819e49d1222b81619fe3c582a028c
   TLS_VERIFY ON)
 LIST(APPEND CMAKE_REQUIRED_INCLUDES "${CMAKE_BINARY_DIR}/.mkbuild/include")
-CHECK_INCLUDE_FILE_CXX("mkbouncer.hpp" MK_HAVE_HEADER_6263)
-if(NOT ("${MK_HAVE_HEADER_6263}"))
+CHECK_INCLUDE_FILE_CXX("mkbouncer.hpp" MK_HAVE_HEADER_6320)
+if(NOT ("${MK_HAVE_HEADER_6320}"))
   message(FATAL_ERROR "cannot find: mkbouncer.hpp")
 endif()
 
@@ -166,9 +169,9 @@ endif()
 message(STATUS "mkdirAll: ${CMAKE_BINARY_DIR}/.mkbuild/include")
 execute_process(COMMAND
   ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/.mkbuild/include"
-  RESULT_VARIABLE FAILURE_6602)
-if("${FAILURE_6602}")
-  message(FATAL_ERROR "${FAILURE_6602}")
+  RESULT_VARIABLE FAILURE_6659)
+if("${FAILURE_6659}")
+  message(FATAL_ERROR "${FAILURE_6659}")
 endif()
 message(STATUS "download: https://raw.githubusercontent.com/measurement-kit/mkcurl/v0.12.0/mkcurl.hpp")
 file(DOWNLOAD https://raw.githubusercontent.com/measurement-kit/mkcurl/v0.12.0/mkcurl.hpp
@@ -176,8 +179,8 @@ file(DOWNLOAD https://raw.githubusercontent.com/measurement-kit/mkcurl/v0.12.0/m
   EXPECTED_HASH SHA256=cb58b85ccdf8d9f3b559ccab7d2f31cad4f8aba774e9953534e32373d415ec94
   TLS_VERIFY ON)
 LIST(APPEND CMAKE_REQUIRED_INCLUDES "${CMAKE_BINARY_DIR}/.mkbuild/include")
-CHECK_INCLUDE_FILE_CXX("mkcurl.hpp" MK_HAVE_HEADER_7132)
-if(NOT ("${MK_HAVE_HEADER_7132}"))
+CHECK_INCLUDE_FILE_CXX("mkcurl.hpp" MK_HAVE_HEADER_7189)
+if(NOT ("${MK_HAVE_HEADER_7189}"))
   message(FATAL_ERROR "cannot find: mkcurl.hpp")
 endif()
 
@@ -188,9 +191,9 @@ endif()
 message(STATUS "mkdirAll: ${CMAKE_BINARY_DIR}/.mkbuild/include")
 execute_process(COMMAND
   ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/.mkbuild/include"
-  RESULT_VARIABLE FAILURE_7465)
-if("${FAILURE_7465}")
-  message(FATAL_ERROR "${FAILURE_7465}")
+  RESULT_VARIABLE FAILURE_7522)
+if("${FAILURE_7522}")
+  message(FATAL_ERROR "${FAILURE_7522}")
 endif()
 message(STATUS "download: https://raw.githubusercontent.com/measurement-kit/mkmock/v0.2.0/mkmock.hpp")
 file(DOWNLOAD https://raw.githubusercontent.com/measurement-kit/mkmock/v0.2.0/mkmock.hpp
@@ -198,8 +201,8 @@ file(DOWNLOAD https://raw.githubusercontent.com/measurement-kit/mkmock/v0.2.0/mk
   EXPECTED_HASH SHA256=f07bc063a2e64484482f986501003e45ead653ea3f53fadbdb45c17a51d916d2
   TLS_VERIFY ON)
 LIST(APPEND CMAKE_REQUIRED_INCLUDES "${CMAKE_BINARY_DIR}/.mkbuild/include")
-CHECK_INCLUDE_FILE_CXX("mkmock.hpp" MK_HAVE_HEADER_7993)
-if(NOT ("${MK_HAVE_HEADER_7993}"))
+CHECK_INCLUDE_FILE_CXX("mkmock.hpp" MK_HAVE_HEADER_8050)
+if(NOT ("${MK_HAVE_HEADER_8050}"))
   message(FATAL_ERROR "cannot find: mkmock.hpp")
 endif()
 
@@ -210,9 +213,9 @@ endif()
 message(STATUS "mkdirAll: ${CMAKE_BINARY_DIR}/.mkbuild/include")
 execute_process(COMMAND
   ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/.mkbuild/include"
-  RESULT_VARIABLE FAILURE_8324)
-if("${FAILURE_8324}")
-  message(FATAL_ERROR "${FAILURE_8324}")
+  RESULT_VARIABLE FAILURE_8381)
+if("${FAILURE_8381}")
+  message(FATAL_ERROR "${FAILURE_8381}")
 endif()
 message(STATUS "download: https://raw.githubusercontent.com/nlohmann/json/v3.6.1/single_include/nlohmann/json.hpp")
 file(DOWNLOAD https://raw.githubusercontent.com/nlohmann/json/v3.6.1/single_include/nlohmann/json.hpp
@@ -220,8 +223,8 @@ file(DOWNLOAD https://raw.githubusercontent.com/nlohmann/json/v3.6.1/single_incl
   EXPECTED_HASH SHA256=d2eeb25d2e95bffeb08ebb7704cdffd2e8fca7113eba9a0b38d60a5c391ea09a
   TLS_VERIFY ON)
 LIST(APPEND CMAKE_REQUIRED_INCLUDES "${CMAKE_BINARY_DIR}/.mkbuild/include")
-CHECK_INCLUDE_FILE_CXX("json.hpp" MK_HAVE_HEADER_8876)
-if(NOT ("${MK_HAVE_HEADER_8876}"))
+CHECK_INCLUDE_FILE_CXX("json.hpp" MK_HAVE_HEADER_8933)
+if(NOT ("${MK_HAVE_HEADER_8933}"))
   message(FATAL_ERROR "cannot find: json.hpp")
 endif()
 
